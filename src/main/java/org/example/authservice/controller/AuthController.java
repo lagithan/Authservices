@@ -32,6 +32,7 @@ public class AuthController {
     @Autowired
     private Cookieutil cookieutil;
 
+    @Autowired
     private AppConfig appConfig;
 
     public AuthController(AuthService authService, StoreCreateService storeCreateService) {
