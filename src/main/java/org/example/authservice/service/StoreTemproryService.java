@@ -15,6 +15,7 @@ import org.example.authservice.security.JwtTokenProvider;
 import org.example.authservice.util.BasicUtil;
 import org.example.authservice.util.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Data
@@ -46,14 +47,21 @@ public class StoreTemproryService {
     @Autowired
     private AuthResponse authResponse;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     public StoreSignupResponse VerifyStore(StoreSignupRequest storeSignupRequest) throws JsonProcessingException {
         this.id = basicUtil.generateId();
         this.token = basicUtil.generateToken();
         storeUser.setEmail(storeSignupRequest.getEmail());
-        storeUser.setPassword(storeSignupRequest.getPassword());
+        storeUser.setPassword(passwordEncoder.encode(storeSignupRequest.getPassword()));
         storeUser.setName(storeSignupRequest.getName());
         ObjectMapper objectMapper = new ObjectMapper();
         String userJson = objectMapper.writeValueAsString(this.storeUser);
+
+        if (userRepository.existsByEmail(storeSignupRequest.getEmail())) {
+            throw new BadRequestException("Email is already taken");
+        }
 
         try{
             boolean result = redisUtil.saveToRedis(this.token,userJson);
@@ -67,6 +75,7 @@ public class StoreTemproryService {
             StoreSignupResponse storeSignupResponse = new StoreSignupResponse();
             storeSignupResponse.setEmail(storeSignupRequest.getEmail());
             storeSignupResponse.setemailsent(true);
+            storeSignupResponse.setMessage("Email sent successfully");
             return storeSignupResponse;
         }
 
@@ -98,11 +107,5 @@ public class StoreTemproryService {
         authResponse.setRefreshToken(refreshtoken);
         return authResponse;
     }
-
-
-
-
-
-
 
 }

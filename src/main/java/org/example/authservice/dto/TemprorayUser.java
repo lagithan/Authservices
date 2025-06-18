@@ -8,9 +8,8 @@ public class TemprorayUser {
     private String email;
     private String password;
     private User.UserRole role = User.UserRole.store_owner;
+    private User.AuthProvider provider = User.AuthProvider.LOCAL;
     public TemprorayUser() {}
-    public TemprorayUser(int id, String name, String email, String password) {}
-
 
     public String getName() {
         return name;
@@ -19,21 +18,25 @@ public class TemprorayUser {
         this.name = name;
     }
     public String getEmail() {
-        return email;
+        return this.email;
     }
     public void setEmail(String email) {
         this.email = email;
     }
     public String getPassword() {
-        return password;
+        return this.password;
     }
     public void setPassword(String password) {
         this.password = password;
     }
     public User.UserRole getRole() {
-        return role;
+        return this.role;
     }
     public void setRole(User.UserRole role) {
         this.role = role;
+    }
+    public User.AuthProvider getProvider() {return this.provider;}
+    public void setProvider(User.AuthProvider provider) {
+        this.provider = provider;
     }
     }
