@@ -4,8 +4,7 @@ import jakarta.persistence.*;
 
 import java.time.Instant;
 
-@Entity
-@Table(name = "refresh_tokens")
+
 public class RefreshToken {
 
     @Id
@@ -13,11 +12,6 @@ public class RefreshToken {
 
     @Column(nullable = false, unique = true)
     private String token;
-
-    @OneToOne
-    @MapsId
-    @JoinColumn(name = "id")
-    private User user;
 
     @Column(nullable = false)
     private Instant expiryDate;
@@ -32,7 +26,6 @@ public class RefreshToken {
 
     // Constructor for application tokens
     public RefreshToken(User user, String token, Instant expiryDate) {
-        this.user = user;
         this.token = token;
         this.expiryDate = expiryDate;
     }
@@ -51,9 +44,6 @@ public class RefreshToken {
         return token;
     }
 
-    public User getUser() {
-        return user;
-    }
 
     public Instant getExpiryDate() {
         return expiryDate;
@@ -71,10 +61,6 @@ public class RefreshToken {
 
     public void setToken(String token) {
         this.token = token;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
     }
 
     public void setExpiryDate(Instant expiryDate) {

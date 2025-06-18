@@ -1,14 +1,22 @@
 package org.example.authservice.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.validation.Valid;
+import org.example.authservice.config.AppConfig;
 import org.example.authservice.dto.*;
 import org.example.authservice.entity.User;
 import org.example.authservice.service.AuthService;
 import org.example.authservice.service.StoreCreateService;
+import org.example.authservice.service.StoreTemproryService;
+import org.example.authservice.util.Cookieutil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/")
@@ -17,6 +25,14 @@ public class AuthController {
 
     private final AuthService authService;
     private final StoreCreateService storeCreateService;
+
+    @Autowired
+    private StoreTemproryService storeTemproryService;
+
+    @Autowired
+    private Cookieutil cookieutil;
+
+    private AppConfig appConfig;
 
     public AuthController(AuthService authService, StoreCreateService storeCreateService) {
         this.authService = authService;
@@ -65,5 +81,24 @@ public class AuthController {
         logger.info("Store create request received");
         StoreAuthResponse response = storeCreateService.createStore(storeCreateRequest);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/store/verify")
+    public ResponseEntity<StoreSignupResponse>verifyStore(@Valid @RequestBody StoreSignupRequest storeSignupRequest) throws JsonProcessingException {
+        logger.info("Store verify request received");
+        StoreSignupResponse response= storeTemproryService.VerifyStore(storeSignupRequest);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("verify")
+    public ResponseEntity<StoreAuthResponse> verifyStore(@RequestParam("token") String token,
+                                                         HttpServletResponse response) throws IOException {
+        logger.info("Email verify request received");
+        AuthResponse authResponse = storeTemproryService.authenticateToken(token);
+        cookieutil.setAuthenticationCookies(response, authResponse.getAccessToken(), authResponse.getRefreshToken());
+        response.sendRedirect(appConfig.getAuthSuccessRedirect());
+        return null;
+
+
     }
 }

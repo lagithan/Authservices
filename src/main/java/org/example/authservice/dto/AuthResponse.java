@@ -1,5 +1,9 @@
 package org.example.authservice.dto;
 
+
+import org.springframework.stereotype.Service;
+
+@Service
 public class AuthResponse {
     private String accessToken;
     private String refreshToken;
