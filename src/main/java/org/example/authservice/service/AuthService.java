@@ -2,17 +2,17 @@ package org.example.authservice.service;
 
 import org.example.authservice.config.AppConfig;
 import org.example.authservice.dto.*;
-
 import org.example.authservice.entity.RefreshToken;
 import org.example.authservice.entity.User;
 import org.example.authservice.exception.BadRequestException;
 import org.example.authservice.exception.TokenException;
 import org.example.authservice.repository.UserRepository;
 import org.example.authservice.security.JwtTokenProvider;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -23,7 +23,7 @@ public class AuthService {
     private final SocialAuthService socialAuthService;
     private final AppConfig appConfig;
 
-    public AuthService(AuthenticationManager authenticationManager,
+    public AuthService(
                        UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        JwtTokenProvider tokenProvider,
@@ -118,23 +118,31 @@ public class AuthService {
     public AuthResponse refreshToken(RefreshTokenRequest request) {
         String requestRefreshToken = request.getRefreshToken();
 
-        return refreshTokenService.findByToken(requestRefreshToken)
-                .map(refreshTokenService::verifyExpiration)
-                .map(RefreshToken::getUser)
-                .map(user -> {
-                    String accessToken = tokenProvider.generateAccessToken(user);
+        try{
+            Optional<User> user = refreshTokenService.verifyRefreshtoken(requestRefreshToken);
+            if(user.isPresent()){
+                String accessToken = tokenProvider.generateAccessToken(user.get());
 
-                    UserDto userDto = mapUserToUserDto(user);
+                UserDto userDto = mapUserToUserDto(user.get());
 
-                    return new AuthResponse(
-                            accessToken,
-                            requestRefreshToken,
-                            appConfig.getAccessTokenExpirationMs() / 1000,
-                            userDto
-                    );
-                })
-                .orElseThrow(() -> new TokenException("Refresh token not found"));
+                return new AuthResponse(
+                        accessToken,
+                        requestRefreshToken,
+                        appConfig.getAccessTokenExpirationMs() / 1000,
+                        userDto
+                );
+            }
+            else {
+                // Handle case when user is not present (token expired/invalid)
+                throw new TokenException("Refresh token expired or invalid");
+            }
+
+        } catch (Exception e) {
+            throw new TokenException("Invalid Refresh Token");
+        }
     }
+
+
 
     @Transactional
     public void logout(RefreshTokenRequest request) {
